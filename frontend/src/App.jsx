@@ -1,27 +1,28 @@
-import Form from "./components/Form"
+import Form from "./Form"
 import {BrowserRouter, Routes, Route, Navigate} from 'react-router-dom'
-import Home from "./components/Home"
+import Home from "./Home"
 import AppContext from "./AppContext"
 import { useState } from "react";
 import UpdateUser from "./UpdateUser";
-  
 
 
 function App() {
-  // const [user, setUser] = useState({status: ''});
-  // const changeUserState = async (values) => {
-  //   let newUser = await UpdateUser(values)
-  //   setUser(newUser)
-  //   return newUser
-  // }
+  const [user, setUser] = useState({status: ''});
+  const changeUserState = async (values) => {
+    let newUser = await UpdateUser(values)
+    setUser(newUser)
+    return newUser
+}
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<Home />}></Route>
-        <Route path='/login' element={<Form heading='Login' />}></Route>
-        <Route path='/signup' element={<Form heading='Sign up' />}></Route>
-      </Routes>
-    </BrowserRouter>
+    <AppContext.Provider value={{ user, changeUserState, setUser }}>
+      <BrowserRouter>
+        <Routes>
+          <Route path='/' element={user.status === 'Active' ? <Navigate to='/home' /> : <Form heading='Login' />}></Route>
+          <Route path='/signup' element={<Form heading='Sign up' />}></Route>
+          <Route path='/home' element={user.status === 'Active' ? <Home /> : <Navigate to='/' />}></Route>
+        </Routes>
+      </BrowserRouter>
+      </AppContext.Provider>
   )
 }
 

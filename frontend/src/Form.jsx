@@ -1,19 +1,13 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import {useDispatch, useSelector} from 'react-redux'
 import axios from 'axios'
-import ValidateLogin from '../LoginValidation'
+import ValidateLogin from './LoginValidation'
 import FormField from './FormField'
-import { useAppContext } from '../AppContext'
-import {setUser} from "../features/login/loginSlice"
-import changeUserState from '../UpdateUser'
+import moment from 'moment'
+import { useAppContext } from './AppContext'
 
 const Form = ({heading}) => {
-    // const {user, changeUserState, setUser} = useAppContext();
-
-    const dispatch = useDispatch()
-    const user = useSelector(state => state.login.currentUser)
-
+    const {user, changeUserState, setUser} = useAppContext();
     let messageText = ''
     if (user.status === 'Blocked') {
         messageText = "You're blocked and can no longer log into the system"
@@ -28,19 +22,21 @@ const Form = ({heading}) => {
     const [values, setValues] = useState({
         name: '',
         email: '',
-        password: ''
+        password: '',
+        lastLogin: ''
     })
     const [errors, setErrors] = useState({})
     const navigate = useNavigate();
     const handleInput = (event) => {
-        setValues(prev => ({...prev, [event.target.name]: event.target.value}))
+        let loginTime = moment().format("HH:mm:ss, MMM D, YYYY");
+        setValues(prev => ({...prev, [event.target.name]: event.target.value, lastLogin: loginTime}))
     }
     const handleSubmit = (event) => {
         event.preventDefault()
+        setErrors(ValidateLogin(values))
         let errorsTemp = ValidateLogin(values)
-        setErrors(errorsTemp)
         if (heading === 'Sign up' && Object.values(errorsTemp).every(value => value === '')) {
-            axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/users/signup`, values)
+            axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/signup`, values)
             .then(res => {
                 console.log(res)
                 if (res.data === 'Email exists') {
@@ -48,19 +44,17 @@ const Form = ({heading}) => {
                 } else {
                     console.log('Successful sign up')
                     setMessage(prev => ({...prev, text:'Successful sign up. Now log into the system', type:'success'}))
-                    navigate('/login')
+                    navigate('/')
                 }
             })
             .catch(err => console.log(err))
         }
         else if (heading === 'Login' && Object.values(errorsTemp).slice(1).every(value => value === '')) {
-            axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/users/login`, values)
+            axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/login`, values)
             .then(res => {
                 console.log(res.data)
                 if (res.data === 'Success') {
-                    //changeUserState(values)
-                    dispatch(setUser(changeUserState(values)))
-                    navigate('/')
+                    changeUserState(values)
                     if (user.status === 'Blocked') {
                         setMessage(prev => ({...prev, text:"You're blocked and can no longer log into the system"}))
                     }
@@ -89,7 +83,7 @@ const Form = ({heading}) => {
                 <FormField name='password' onChange={handleInput} errors={errors} />
                 <div className="d-flex justify-content-between">
                     <button type='submit' className='btn btn-success'>{heading}</button>
-                    <Link to={heading === 'Login' ? '/signup' : '/login'} type='button' className='btn btn-secondary'>
+                    <Link to={heading === 'Login' ? '/signup' : '/'} type='button' className='btn btn-secondary'>
                         {heading === 'Login' ? 'Sign up' : 'Login'}
                     </Link>
                 </div>

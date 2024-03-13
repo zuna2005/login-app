@@ -1,7 +1,7 @@
 import axios from "axios"
 
 async function UpdateUser(user) {
-    const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/users/user`, user)
+    const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_URL}/user`, user)
     .catch(err => console.log(err))
     console.log('update user result', res.data)
     if (res.status == 200) {
@@ -10,9 +10,4 @@ async function UpdateUser(user) {
     
 }
 
-const changeUserState = async (values) => {
-    let newUser = await UpdateUser(values)
-    return newUser
-}
-
-export default changeUserState
+export default UpdateUser
